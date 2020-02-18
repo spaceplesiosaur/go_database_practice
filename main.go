@@ -3,7 +3,9 @@ package main
 import (
   "database/sql"
   "fmt"
-  "github.com/gin-gonic/gin.v1"
+  "net/http"
+	"strconv"
+  "github.com/gin-gonic/gin"
   "github.com/jinzhu/gorm"
 
   _ "github.com/lib/pq"
@@ -38,6 +40,7 @@ const (
 //////////
 
 var db *gorm.DB
+// gorm is like knex
 
 func init() {
 	//open a db connection
