@@ -20,9 +20,9 @@ import (
 	//format - functions related to input and output
 	"net/http"
 	//this is nice for errors
-	"strconv"
+	// "strconv"
   //we need this for ParseFloat
-  "reflect"
+  // "reflect"
   //this is for figuring out data type
 	"github.com/gin-gonic/gin"
 	//This is like express, it's a library for handling http requests and responses
@@ -112,7 +112,7 @@ type (
 		AvBarDuration float64 `json:"avbarduration"`
 		Duration      float64 `json:"duration"`
 		Tempo         float64 `json:"tempo"`
-		TimeSignature uint    `json: "timesignature"`
+		TimeSignature int64    `json: "timesignature"`
 	}
 
 	// transformedTodo represents a formatted todo, how you show it in json
@@ -125,7 +125,7 @@ type (
 		AvBarDuration float64 `json:"avbarduration"`
 		Duration      float64 `json:"duration"`
 		Tempo         float64 `json:"tempo"`
-		TimeSignature uint    `json: "timesignature"`
+		TimeSignature int64    `json: "timesignature"`
 	}
 )
 
@@ -137,31 +137,31 @@ func addSong(context *gin.Context) {
 
   //so...PostForm returns a string!  We said we wanted floats, so we have to parse the values from the form into floats.  The thing is, floats return a value and an error, so we have to do some error handling.
 
-  delay, err := strconv.ParseFloat(context.PostForm("delay"), 64)
-  if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err, "DataType": reflect.TypeOf(delay), "Delay": context.PostForm("delay")})
-		return
-	}
-  avbarduration, err := strconv.ParseFloat(context.PostForm("avbarduration"), 64)
-  if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "avbarduration should be a float!"})
-		return
-	}
-  duration, err := strconv.ParseFloat(context.PostForm("duration"), 64)
-  if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "duration should be a float!"})
-		return
-	}
-  tempo, err := strconv.ParseFloat(context.PostForm("tempo"), 64)
-  if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "tempo should be a float!"})
-		return
-	}
-  timesignature, err := strconv.ParseUint(context.PostForm("timesignature"), 10, 32)
-  if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "timesignature should be an integer!"})
-		return
-	}
+  // delay, err := strconv.ParseFloat(context.JSON("delay"), 64)
+  // if err != nil {
+  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err, "DataType": reflect.TypeOf(delay), "Delay": context.PostForm("delay")})
+	// 	return
+	// }
+  // avbarduration, err := strconv.ParseFloat(context.JSON("avbarduration"), 64)
+  // if err != nil {
+  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "avbarduration should be a float!"})
+	// 	return
+	// }
+  // duration, err := strconv.ParseFloat(context.JSON("duration"), 64)
+  // if err != nil {
+  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "duration should be a float!"})
+	// 	return
+	// }
+  // tempo, err := strconv.ParseFloat(context.JSON("tempo"), 64)
+  // if err != nil {
+  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "tempo should be a float!"})
+	// 	return
+	// }
+  // timesignature, err := strconv.ParseUint(context.Param("timesignature"), 10, 32)
+  // if err != nil {
+  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "timesignature should be an integer!"})
+	// 	return
+	// }
 
   //Kit just knows that ParseUint expects a 32, I definitely don't see it in the docs.
 
@@ -170,14 +170,14 @@ func addSong(context *gin.Context) {
   //notice Delay and the others are now assigned to variables defined above.
 
 	song := songModel{
-    Title: context.PostForm("title"),
-    SpotifyId: context.PostForm("spotifyid"),
-    URL: context.PostForm("url"),
-    Delay: delay,
-    AvBarDuration: avbarduration,
-    Duration: duration,
-    Tempo: tempo,
-    TimeSignature: uint(timesignature),
+    Title: context.GetString("title"),
+    SpotifyId: context.GetString("spotifyid"),
+    URL: context.GetString("url"),
+    Delay: context.GetFloat64("delay"),
+    AvBarDuration: context.GetFloat64("avbarduration"),
+    Duration: context.GetFloat64("duration"),
+    Tempo: context.GetFloat64("tempo"),
+    TimeSignature: context.GetInt64("timesignature"),
   }
 
   //The parse functions return the widest type (float64, int64, and uint64), but if the size argument specifies a narrower width the result can be converted to that narrower type without data loss:
