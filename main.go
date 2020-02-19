@@ -22,6 +22,8 @@ import (
 	//this is nice for errors
 	"strconv"
   //we need this for ParseFloat
+  "reflect"
+  //this is for figuring out data type
 	"github.com/gin-gonic/gin"
 	//This is like express, it's a library for handling http requests and responses
 	"github.com/jinzhu/gorm"
@@ -137,7 +139,7 @@ func addSong(context *gin.Context) {
 
   delay, err := strconv.ParseFloat(context.PostForm("delay"), 64)
   if err != nil {
-    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err})
+    context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err, "DataType": reflect.TypeOf(delay), "Delay": context.PostForm("delay")})
 		return
 	}
   avbarduration, err := strconv.ParseFloat(context.PostForm("avbarduration"), 64)
