@@ -115,6 +115,17 @@ type (
 		TimeSignature int64    `json: "timesignature"`
 	}
 
+  songInput struct {
+		Title         string  `json:"title"`
+		SpotifyId     string  `json:"spotifyid"`
+		URL           string  `json:"url"`
+	  Delay         float64 `json:"delay"`
+		AvBarDuration float64 `json:"avbarduration"`
+		Duration      float64 `json:"duration"`
+		Tempo         float64 `json:"tempo"`
+		TimeSignature int64    `json: "timesignature"`
+	}
+
 	// transformedTodo represents a formatted todo, how you show it in json
 	transformedSong struct {
 		ID            uint    `json:"id"`
@@ -168,17 +179,24 @@ func addSong(context *gin.Context) {
 
   //https://golang.org/src/net/http/status.go for Go status codes
   //notice Delay and the others are now assigned to variables defined above.
+  var body songInput
+  //declares a variable of type songInput, which was described/defined above in 'types'
 
-	song := songModel{
-    Title: context.GetString("title"),
-    SpotifyId: context.GetString("spotifyid"),
-    URL: context.GetString("url"),
-    Delay: context.GetFloat64("delay"),
-    AvBarDuration: context.GetFloat64("avbarduration"),
-    Duration: context.GetFloat64("duration"),
-    Tempo: context.GetFloat64("tempo"),
-    TimeSignature: context.GetInt64("timesignature"),
+  context.BindJSON(&body)
+  //BindJSON is a method on context - it says 'get the JSON payload that was just sent and unpack it into the type of structure I assigned it(which in this case was song input)'
+
+  song := songModel{
+    Title: body.Title,
+    SpotifyId: body.SpotifyId,
+    URL: body.URL,
+    Delay: body.Delay,
+    AvBarDuration: body.AvBarDuration,
+    Duration: body.Duration,
+    Tempo: body.Tempo,
+    TimeSignature: body.TimeSignature,
   }
+
+  //Now that we have our bound JSON object, we can assign each value to a value in that object (which is called body)
 
   //The parse functions return the widest type (float64, int64, and uint64), but if the size argument specifies a narrower width the result can be converted to that narrower type without data loss:
 
