@@ -11,9 +11,20 @@ func setUp() *gorm.DB {
 
   testDB := &gorm.DB{}
   testDB, err = gorm.Open("sqlite3", ":memory:")
+  if err != nil {
+		panic(err)
+	}
+  db.AutoMigrate(&songModel{})
+  
   return testDB
 }
 
 func tearDown(testDB *gorm.DB) {
-  testDB.DB.Close()
+  testDB.Close()
+}
+
+func testEndpoints(t *testing.T) {
+  testDB := setUp()
+
+  tearDown(testDB)
 }
