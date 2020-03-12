@@ -94,7 +94,7 @@ func main() {
 		songs.GET("/", fetchAllSongs)
 		songs.GET("/:id", fetchSong)
 		// v1.PUT("/:id", changeSong)
-		// v1.DELETE("/:id", removeSong)
+		songs.DELETE("/:id", removeSong)
 	}
 	router.Run()
 	//this is the end of our main() function, and is telling the router to run and listen for incoming connections and requests.
@@ -145,39 +145,6 @@ type (
 //Context is the most important part of gin. It allows us to pass variables between middleware, manage the flow, validate the JSON of a request and render a JSON response for example. https://godoc.org/github.com/gin-gonic/gin
 
 func addSong(context *gin.Context) {
-
-  //so...PostForm returns a string!  We said we wanted floats, so we have to parse the values from the form into floats.  The thing is, floats return a value and an error, so we have to do some error handling.
-
-  // delay, err := strconv.ParseFloat(context.JSON("delay"), 64)
-  // if err != nil {
-  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err, "DataType": reflect.TypeOf(delay), "Delay": context.PostForm("delay")})
-	// 	return
-	// }
-  // avbarduration, err := strconv.ParseFloat(context.JSON("avbarduration"), 64)
-  // if err != nil {
-  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "avbarduration should be a float!"})
-	// 	return
-	// }
-  // duration, err := strconv.ParseFloat(context.JSON("duration"), 64)
-  // if err != nil {
-  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "duration should be a float!"})
-	// 	return
-	// }
-  // tempo, err := strconv.ParseFloat(context.JSON("tempo"), 64)
-  // if err != nil {
-  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "tempo should be a float!"})
-	// 	return
-	// }
-  // timesignature, err := strconv.ParseUint(context.Param("timesignature"), 10, 32)
-  // if err != nil {
-  //   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "timesignature should be an integer!"})
-	// 	return
-	// }
-
-  //Kit just knows that ParseUint expects a 32, I definitely don't see it in the docs.
-
-
-  //https://golang.org/src/net/http/status.go for Go status codes
   //notice Delay and the others are now assigned to variables defined above.
   var body songInput
   //declares a variable of type songInput, which was described/defined above in 'types'
@@ -254,6 +221,23 @@ func fetchSong(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _song})
 }
 
+func removeSong(context *gin.Context) {
+	var song songModel
+
+	songID := context.Param("id")
+
+	db.First(&song, songID)
+
+	if song.ID == 0 {
+		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No song found!"})
+		return
+	}
+
+	db.Delete(&song)
+
+	context.JSON(http.StatusNoContent, gin.H{"status": http.StatusNoContent, "message": "Successfully deleted!"})
+
+}
 // changeSong update a todo
 // func changeSong(c *gin.Context) {
 // 	var song songModel
@@ -285,3 +269,39 @@ func fetchSong(context *gin.Context) {
 // 	db.Delete(&song)
 // 	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "message": "Song deleted successfully!"})
 // }
+
+
+//stuff
+
+//so...PostForm returns a string!  We said we wanted floats, so we have to parse the values from the form into floats.  The thing is, floats return a value and an error, so we have to do some error handling.
+
+// delay, err := strconv.ParseFloat(context.JSON("delay"), 64)
+// if err != nil {
+//   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "delay should be a float!", "Err": err, "DataType": reflect.TypeOf(delay), "Delay": context.PostForm("delay")})
+// 	return
+// }
+// avbarduration, err := strconv.ParseFloat(context.JSON("avbarduration"), 64)
+// if err != nil {
+//   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "avbarduration should be a float!"})
+// 	return
+// }
+// duration, err := strconv.ParseFloat(context.JSON("duration"), 64)
+// if err != nil {
+//   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "duration should be a float!"})
+// 	return
+// }
+// tempo, err := strconv.ParseFloat(context.JSON("tempo"), 64)
+// if err != nil {
+//   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "tempo should be a float!"})
+// 	return
+// }
+// timesignature, err := strconv.ParseUint(context.Param("timesignature"), 10, 32)
+// if err != nil {
+//   context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "timesignature should be an integer!"})
+// 	return
+// }
+
+//Kit just knows that ParseUint expects a 32, I definitely don't see it in the docs.
+
+
+//https://golang.org/src/net/http/status.go for Go status codes
