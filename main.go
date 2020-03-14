@@ -84,18 +84,7 @@ func init() {
 
 func main() {
 
-	router := gin.Default()
-	//Default is a method on gin that return the default type of router it likes to use
-	//now that router is the name for this router we called out of gin, we can run methods on it.  Group allows us to make a bunch of endpoints off of this one path.
-
-	songs := router.Group("/api/v1/songs")
-	{
-		songs.POST("/", addSong)
-		songs.GET("/", fetchAllSongs)
-		songs.GET("/:id", fetchSong)
-		// v1.PUT("/:id", changeSong)
-		songs.DELETE("/:id", removeSong)
-	}
+	router := MakeRouter()
 	router.Run()
 	//this is the end of our main() function, and is telling the router to run and listen for incoming connections and requests.
 }
@@ -144,13 +133,41 @@ type (
 
 //Context is the most important part of gin. It allows us to pass variables between middleware, manage the flow, validate the JSON of a request and render a JSON response for example. https://godoc.org/github.com/gin-gonic/gin
 
-func addSong(context *gin.Context) {
+func MakeRouter() *gin.Engine{
+	router := gin.Default()
+	//Default is a method on gin that return the default type of router it likes to use
+	//now that router is the name for this router we called out of gin, we can run methods on it.  Group allows us to make a bunch of endpoints off of this one path.
+
+	songs := router.Group("/api/v1/songs")
+	{
+		songs.POST("/", AddSong)
+		songs.GET("/", fetchAllSongs)
+		songs.GET("/:id", fetchSong)
+		// v1.PUT("/:id", changeSong)
+		songs.DELETE("/:id", removeSong)
+	}
+
+	return router
+}
+
+func AddSong(context *gin.Context) {
   //notice Delay and the others are now assigned to variables defined above.
   var body songInput
   //declares a variable of type songInput, which was described/defined above in 'types'
 
   context.BindJSON(&body)
   //BindJSON is a method on context - it says 'get the JSON payload that was just sent and unpack it into the type of structure I assigned it(which in this case was song input)'
+
+	if body.Title == "" || body.SpotifyId == "" ||  body.URL == "" {
+		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Has a missing or malformed string property"})
+		return
+	}
+
+	if body.Delay == 0 || body.AvBarDuration == 0 ||  body.Duration == 0 || body.Tempo == 0 || body.TimeSignature == 0 {
+		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Missing or malformed numerical property"})
+		return
+	}
+//Spotify doesn't seem to have any 0s, and this is what the bindJson function is returning when a number is missing or is the wrong format.  Need to make sure I use numbers for these values.
 
   song := songModel{
     Title: body.Title,
