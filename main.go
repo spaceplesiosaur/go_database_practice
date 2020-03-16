@@ -43,22 +43,18 @@ const (
 )
 
 //Here we are just defining what we want our host to be - for this db, we don't need a user or pw
+type App struct {
+  DB *gorm.DB
+}
 
-var db *gorm.DB
 
 // gorm is like knex.  this is wrapping our database in gorm and saying that when we call db we mean the gorm wrapped database. LOOK UP gorm.DB
 
-func init() {
-	//open a db connection
-	//Sprintf prints a function into a string and .fmt formats it'
-	psqlInfo := fmt.Sprintf("host=%s port=%d "+
-		"dbname=%s sslmode=disable",
-		host, port, dbname)
-	//This is a connection string, a special way to connect to the pg db that the underlying postgres library uses.
-	var err error
-	//error is likely built into Go.
+func (a *App) Initialize(dbType string, dbInfo string) {
 
-	db, err = gorm.Open("postgres", psqlInfo)
+	var err error
+
+	a.DB, err = gorm.Open(dbType, dbInfo)
 
 	//the way this is written is like destructuring in JS.  gorm.open takes two arguments, the name of the server, and the connection string.  It returns two values, the db connection object (db is of a type defined in gorm.DB) and the error.
 
@@ -69,7 +65,7 @@ func init() {
 
 	fmt.Println("Successfully connected!")
 	//fmt is a library for printing things nicely.  It is printing this line for us.
-	db.AutoMigrate(&songModel{})
+	a.DB.AutoMigrate(&songModel{})
 	//We now have a db called db of the type defined in gorm.DB.  It has methods on it, like AutoMigrate.
 	//Migrate the schema according to the songModel table below
 	//makes sure db table exists and set it up that way
@@ -84,7 +80,21 @@ func init() {
 
 func main() {
 
-	router := MakeRouter()
+	//open a db connection
+	//Sprintf prints a function into a string and .fmt formats it'
+	dbInfo := fmt.Sprintf("host=%s port=%d "+
+		"dbname=%s sslmode=disable",
+		host, port, dbname)
+	//This is a connection string, a special way to connect to the pg db that the underlying postgres library uses.
+
+	//error is likely built into Go.
+
+	// dbType := "postgres"
+
+	a := &App{}
+
+	a.Initialize("postgres", dbInfo)
+	router := a.MakeRouter()
 	router.Run()
 	//this is the end of our main() function, and is telling the router to run and listen for incoming connections and requests.
 }
@@ -115,7 +125,7 @@ type (
 		TimeSignature int64    `json: "timesignature"`
 	}
 
-	// transformedTodo represents a formatted todo, how you show it in json
+	// transformedSong represents a formatted song, how you show it in json
 	transformedSong struct {
 		ID            uint    `json:"id"`
 		Title         string  `json:"title"`
@@ -133,24 +143,24 @@ type (
 
 //Context is the most important part of gin. It allows us to pass variables between middleware, manage the flow, validate the JSON of a request and render a JSON response for example. https://godoc.org/github.com/gin-gonic/gin
 
-func MakeRouter() *gin.Engine{
+func (a *App) MakeRouter() *gin.Engine{
 	router := gin.Default()
 	//Default is a method on gin that return the default type of router it likes to use
 	//now that router is the name for this router we called out of gin, we can run methods on it.  Group allows us to make a bunch of endpoints off of this one path.
 
 	songs := router.Group("/api/v1/songs")
 	{
-		songs.POST("/", AddSong)
-		songs.GET("/", FetchAllSongs)
-		songs.GET("/:id", fetchSong)
+		songs.POST("/", a.AddSong)
+		songs.GET("/", a.FetchAllSongs)
+		songs.GET("/:id", a.FetchSong)
 		// v1.PUT("/:id", changeSong)
-		songs.DELETE("/:id", removeSong)
+		songs.DELETE("/:id", a.RemoveSong)
 	}
 
 	return router
 }
 
-func AddSong(context *gin.Context) {
+func (a *App) AddSong(context *gin.Context) {
   //notice Delay and the others are now assigned to variables defined above.
   var body songInput
   //declares a variable of type songInput, which was described/defined above in 'types'
@@ -184,7 +194,7 @@ func AddSong(context *gin.Context) {
 
   //The parse functions return the widest type (float64, int64, and uint64), but if the size argument specifies a narrower width the result can be converted to that narrower type without data loss:
 
-	db.Save(&song)
+	a.DB.Save(&song)
   //this is a gorm method that saves the song to the database
 	context.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Song created successfully!", "resourceId": song.ID})
 }
@@ -193,16 +203,16 @@ func AddSong(context *gin.Context) {
 
 //context is both a request and a response
 
-func FetchAllSongs(context *gin.Context) {
+func (a *App) FetchAllSongs(context *gin.Context) {
 	//what is a gin context?  It's probably like the request, response objects you pass in as arguments in express.
 	var songs []songModel
 	//this is saying that var songs is equal to an array that follows the structure of songModel
 
-	db.Find(&songs)
+	a.DB.Find(&songs)
 	//db find, and for everything everything you find, put it into the songs array.
 	// SELECT * FROM users;
 
-	if len(songs) <= 0 {
+	if len(songs) == 0 {
 		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No songs found!"})
 		return
 	}
@@ -218,12 +228,12 @@ func FetchAllSongs(context *gin.Context) {
 
 // fetchSong fetch a single song
 
-func fetchSong(context *gin.Context) {
+func (a *App) FetchSong(context *gin.Context) {
 	var song songModel
 	songID := context.Param("id")
 	//again, context is like the request/response objects in express - context.Param is like the request param.
 
-	db.First(&song, songID)
+	a.DB.First(&song, songID)
 	//First is a function that means find the first item that fits the arguments - a song with the passed in song id.
 
 	// SELECT * FROM users WHERE id = 10;
@@ -238,19 +248,19 @@ func fetchSong(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": _song})
 }
 
-func removeSong(context *gin.Context) {
+func (a *App) RemoveSong(context *gin.Context) {
 	var song songModel
 
 	songID := context.Param("id")
 
-	db.First(&song, songID)
+	a.DB.First(&song, songID)
 
 	if song.ID == 0 {
 		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "No song found!"})
 		return
 	}
 
-	db.Delete(&song)
+	a.DB.Delete(&song)
 
 	context.JSON(http.StatusNoContent, gin.H{"status": http.StatusNoContent, "message": "Successfully deleted!"})
 
