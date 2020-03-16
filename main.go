@@ -141,7 +141,7 @@ func MakeRouter() *gin.Engine{
 	songs := router.Group("/api/v1/songs")
 	{
 		songs.POST("/", AddSong)
-		songs.GET("/", fetchAllSongs)
+		songs.GET("/", FetchAllSongs)
 		songs.GET("/:id", fetchSong)
 		// v1.PUT("/:id", changeSong)
 		songs.DELETE("/:id", removeSong)
@@ -159,12 +159,12 @@ func AddSong(context *gin.Context) {
   //BindJSON is a method on context - it says 'get the JSON payload that was just sent and unpack it into the type of structure I assigned it(which in this case was song input)'
 
 	if body.Title == "" || body.SpotifyId == "" ||  body.URL == "" {
-		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Has a missing or malformed string property"})
+		context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "Has a missing or malformed string property"})
 		return
 	}
 
 	if body.Delay == 0 || body.AvBarDuration == 0 ||  body.Duration == 0 || body.Tempo == 0 || body.TimeSignature == 0 {
-		context.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": "Missing or malformed numerical property"})
+		context.JSON(http.StatusUnprocessableEntity, gin.H{"status": http.StatusUnprocessableEntity, "message": "Missing or malformed numerical property"})
 		return
 	}
 //Spotify doesn't seem to have any 0s, and this is what the bindJson function is returning when a number is missing or is the wrong format.  Need to make sure I use numbers for these values.
@@ -193,7 +193,7 @@ func AddSong(context *gin.Context) {
 
 //context is both a request and a response
 
-func fetchAllSongs(context *gin.Context) {
+func FetchAllSongs(context *gin.Context) {
 	//what is a gin context?  It's probably like the request, response objects you pass in as arguments in express.
 	var songs []songModel
 	//this is saying that var songs is equal to an array that follows the structure of songModel

@@ -27,7 +27,7 @@ func tearDown(testDB *gorm.DB) {
   testDB.Close()
 }
 
-func TestEndpoints(t *testing.T) {
+func TestAddSong(t *testing.T) {
   testDB := setUp()
 
   testBody :=  "{\"Title\": \"blue\", \"SpotifyId\": \"12345\", \"URL\": \"www.moose.com\", \"Delay\": 2, \"AvBarDuration\": 3, \"Duration\": 123, \"Tempo\": 4, \"TimeSignature\": 8}"
